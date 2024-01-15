@@ -1,0 +1,10 @@
+# Python files
+.env/
+
+
+# R files
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
