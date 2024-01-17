@@ -8,3 +8,9 @@
 .RData
 .Ruserdata
 *.Rproj
+
+# .nc files
+data/climate_grids/
+
+# Raw Shapefiles (GADM)
+data/geodata/gadm/
