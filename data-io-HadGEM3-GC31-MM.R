@@ -126,4 +126,4 @@ df_hadgem3 <-
 toc()
 
 # Export
-write_parquet(df_hadgem, "data/HadGEM3_regions_daily.parquet")
+write_parquet(df_hadgem, "data/HadGEM3-GC31-MM_regions_daily.parquet")
