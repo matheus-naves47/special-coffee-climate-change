@@ -102,4 +102,4 @@ df_br_dwgd <-
 toc()
 
 # Export
-write_parquet(df_br_dwgd, "data/BR_DWGD_regions_daily.parquet")
+write_parquet(df_br_dwgd, "data/regions_data/BR_DWGD_regions_daily.parquet")

@@ -14,3 +14,9 @@ data/climate_grids/
 
 # Raw Shapefiles (GADM)
 data/geodata/gadm/
+
+# VSCode files
+.vscode
+
+# .txt files
+*.txt
