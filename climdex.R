@@ -8,7 +8,7 @@ library(parallel)
 cmip6_models <-
   list.dirs("data/climate_grids/CMIP6/",
             recursive = F,
-            full.names = F)[c(1:8, 10, 11)]
+            full.names = F)
 
 calendars <-
   c(
@@ -20,6 +20,7 @@ calendars <-
     "365_day",
     "gregorian",
     "gregorian",
+    "365_day",
     "proleptic_gregorian",
     "proleptic_gregorian"
   )
@@ -29,7 +30,7 @@ remappings <- c("conservative", "bilinear")
 
 
 # Loop to import every model
-for (remapping in remappings) {
+for (remapping in remappings[1]) {
   for (model in cmip6_models) {
     assign(paste0("df_", model, "_", remapping),
            read_parquet(
@@ -48,7 +49,7 @@ for (remapping in remappings) {
   read_parquet("data/regions_data/BR_DWGD_regions_daily.parquet") |> filter(year(DATE) <= 2014)
 
 # List regions
-regions <- df_MIROC6_bilinear$REGION |> unique()
+regions <- df_MIROC6_conservative$REGION |> unique()
 
 
 # Function to calculate yearly climdex indices by model/region
@@ -216,7 +217,7 @@ yearly_indices_by_model_region <-
 
 
 # Apply function for all regions across all models and put it in a single dataframe
-df_climdex <- tibble()
+df_climdex_cmip6 <- tibble()
 
 # Conservative
 for (model in cmip6_models) {
@@ -227,7 +228,7 @@ for (model in cmip6_models) {
       remapping = 'conservative'
     ), mc.cores = 6) |> bind_rows()
   
-  df_climdex_cmip6 <- bind_rows(df_climdex, df_aux)
+  df_climdex_cmip6 <- bind_rows(df_climdex_cmip6, df_aux)
 }
 
 # Bilinear
@@ -239,13 +240,14 @@ for (model in cmip6_models) {
       remapping = 'bilinear'
     ), mc.cores = 6) |> bind_rows()
   
-  df_climdex_cmip6 <- bind_rows(df_climdex, df_aux)
+  df_climdex_cmip6 <- bind_rows(df_climdex_cmip6, df_aux)
 }
 
 
 # Apply function for all regions on BR-DWGD model
 df_climdex_dwgd <- mclapply(regions, function(x)
   yearly_indices_by_model_region(model = "BR-DWGD", region = x), mc.cores = 6) |> bind_rows()
+
 
 # Export results
 write_csv(df_climdex_dwgd, "data/climdex/BR-DWGD_climdex_indices.csv") # feed to goodness_of_fit_tests.R

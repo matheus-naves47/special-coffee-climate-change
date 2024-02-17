@@ -6,7 +6,8 @@ library(RColorBrewer)
 
 
 # Color palette to use in the plots
-pal <- pal_npg("nrc", alpha = 1)(10)
+# pal <- pal_npg("nrc", alpha = 1)(10)
+pal <- pal_d3(palette = "category20b", alpha = 1)(11)
 
 # Import data on Brazil's macroregions
 macroregions_br <-
@@ -23,17 +24,15 @@ cmip6_models <-
             full.names = F)
 
 
-# remapping <- "conservative"
-remapping <- "bilinear"
+remapping <- "conservative"
+# remapping <- "bilinear"
 
-# Loop to import every model and GoF dataframe
+# Loop to import every model
 for (model in cmip6_models) {
   
   assign(paste0("df_", model),
          read_parquet(paste0("data/regions_data/", model, "_regions_daily_", remapping, ".parquet")))
-  
-  assign(paste0(model, "_gof"),
-         read_csv(paste0("data/goodness_of_fit/", model, "_gof_", remapping, ".csv")))
+
   
 }
 
@@ -47,7 +46,10 @@ data <- df_dwgd |> right_join(`df_IPSL-CM6A-LR`, by = join_by(REGION, UF, UF_2, 
   right_join(`df_CMCC-ESM2`, by = join_by(REGION, UF, UF_2, DATE)) |> 
   right_join(`df_GFDL-ESM4`, by = join_by(REGION, UF, UF_2, DATE), suffix = c("_CMCC_ESM2", "_GFDL_ESM4")) |> 
   right_join(`df_INM-CM4-8`, by = join_by(REGION, UF, UF_2, DATE)) |> 
-  right_join(`df_HadGEM3-GC31-MM`, by = join_by(REGION, UF, UF_2, DATE), suffix = c("_INM_CM4_8", "_HadGEM3_GC31_MM"))
+  right_join(`df_HadGEM3-GC31-MM`, by = join_by(REGION, UF, UF_2, DATE), suffix = c("_INM_CM4_8", "_HadGEM3_GC31_MM")) |> 
+  right_join(`df_MM-ENSEMBLE`, by = join_by(REGION, UF, UF_2, DATE)) |> rename(TMIN_MM_ENSEMBLE = TMIN,
+                                                                               TMAX_MM_ENSEMBLE = TMAX,
+                                                                               PREC_MM_ENSEMBLE = PREC)
 
 rm(list = ls(pattern = "df_")) # Remove dataframes from memory
 
@@ -55,62 +57,127 @@ rm(list = ls(pattern = "df_")) # Remove dataframes from memory
 # Taylor Diagrams ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Tmin
-taylor.diagram(ref = data$TMIN_DWGD, model = data$TMIN_BCC_ESM1, normalize = T, col = pal[1], pch=19, main = "TMIN", pcex=1.5)
+taylor.diagram(
+  ref = data$TMIN_DWGD,
+  model = data$TMIN_BCC_ESM1,
+  normalize = T,
+  col = pal[1],
+  pch = 19,
+  main = "TMIN",
+  pcex = 1.5
+)
 
-for (i in c(3:10)) {
-  taylor.diagram(ref = data$TMIN_DWGD, model = data[[str_replace_all(paste0("TMIN_", cmip6_models[i]), "-", "_")]], normalize = T, col = pal[i], pch = i, pcex = 1.5, add = TRUE)
+for (i in c(3:11)) {
+  taylor.diagram(
+    ref = data$TMIN_DWGD,
+    model = data[[str_replace_all(paste0("TMIN_", cmip6_models[i]), "-", "_")]],
+    normalize = T,
+    col = pal[i],
+    pch = i,
+    pcex = 1.5,
+    add = TRUE
+  )
   
 }
-legend("topright", cmip6_models[c(1,3:10)], pch=c(19, 3:10), col = pal[c(1,3:10)], ncol = 1, inset = c(-0.055,-0.125), cex=.8, pt.cex = c(rep(1.5,5), rep(1.25,3), 1.5), text.width = 0.325)
+legend(
+  "topright",
+  cmip6_models[c(1, 3:11)],
+  pch = c(19, 3:11),
+  col = pal[c(1, 3:11)],
+  ncol = 1,
+  inset = c(-0.055, -0.125),
+  cex = .8,
+  pt.cex = c(rep(1.5, 5), rep(1.25, 3), 1.5, 1.5),
+  text.width = 0.325
+)
+
 
 
 
 # Tmax
-taylor.diagram(ref = data$TMIN_DWGD, model = data$TMAX_BCC_ESM1, normalize = T, col = pal[1], pch=19, main = "TMAX", pcex=1.5)
-
-for (i in c(3:10)) {
-  taylor.diagram(ref = data$TMIN_DWGD, model = data[[str_replace_all(paste0("TMAX_", cmip6_models[i]), "-", "_")]], normalize = T, col = pal[i], pch = i, pcex = 1.5, add = TRUE)
+taylor.diagram(
+  ref = data$TMIN_DWGD,
+  model = data$TMAX_BCC_ESM1,
+  normalize = T,
+  col = pal[1],
+  pch = 19,
+  main = "TMAX",
+  pcex = 2,
   
+)
+
+for (i in c(3:11)) {
+  taylor.diagram(
+    ref = data$TMIN_DWGD,
+    model = data[[str_replace_all(paste0("TMAX_", cmip6_models[i]), "-", "_")]],
+    normalize = T,
+    col = pal[i],
+    pch = i,
+    pcex = 2,
+    lwd = 20,
+    add = TRUE
+  )
 }
-legend("topright", cmip6_models[c(1,3:10)], pch=c(19, 3:10), col = pal[c(1,3:10)], ncol = 1, inset = c(-0.075,-0.125), cex=.8, pt.cex = c(rep(1.5,5), rep(1.25,3), 1.5), text.width = 0.4)
+legend(
+  "topright",
+  cmip6_models[c(1, 3:11)],
+  pch = c(19, 3:11),
+  col = pal[c(1, 3:11)],
+  ncol = 1,
+  inset = c(-0.075, -0.125),
+  cex = .8,
+  pt.cex = c(rep(1.75, 5), rep(1.25, 3), 1.5, 1.5),
+  text.width = 0.4,
+)
+
 
 
 # Prec
-taylor.diagram(ref = data$TMIN_DWGD, model = data$PREC_BCC_ESM1, normalize = T, col = pal[1], pch=19, main = "PREC", pcex=1.5)
+prec_taylor <- taylor.diagram(
+  ref = data$TMIN_DWGD,
+  model = data$PREC_BCC_ESM1,
+  normalize = T,
+  col = pal[1],
+  pch = 19,
+  main = "PREC",
+  pcex = 1.5
+)
 
-for (i in c(2:10)) {
-  taylor.diagram(ref = data$TMIN_DWGD, model = data[[str_replace_all(paste0("PREC_", cmip6_models[i]), "-", "_")]], normalize = T, col = pal[i], pch = i, pcex = 1.5, add = TRUE)
+prec_taylor <- for (i in c(2:11)) {
+  taylor.diagram(
+    ref = data$TMIN_DWGD,
+    model = data[[str_replace_all(paste0("PREC_", cmip6_models[i]), "-", "_")]],
+    normalize = T,
+    col = pal[i],
+    pch = i,
+    pcex = 1.5,
+    add = TRUE
+  )
   
 }
-legend("topright", cmip6_models[c(1:10)], pch=c(19, 2:10), col = pal, ncol = 1, inset = c(-0.05,-0.09), cex=.8, pt.cex = c(rep(1.5,5), rep(1.25,4), 1.5), text.width = 0.9)
+prec_taylor <- legend(
+  "topright",
+  cmip6_models[c(1:11)],
+  pch = c(19, 2:11),
+  col = pal,
+  ncol = 1,
+  inset = c(-0.05, -0.09),
+  cex = .8,
+  pt.cex = c(rep(1.5, 5), rep(1.25, 4), 1.5, 1.5),
+  text.width = 0.99
+)
+
 
 rm(data)
 
 # Portrait Plots ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+data <- read_csv("data/goodness_of_fit/CMIP6_gof.csv") |> left_join(macroregions_br, by = join_by(UF_2)) |>
+  relocate(MACROREGION, .before = REGION) |>
+  arrange_at(c("MACROREGION", "UF_2"))
 
-# Function to create dataframe with specific GoF measures across all models
-gof_per_model <- function(model, remapping) {
-  
-  # Put model name as a variable and join with macroregions data to arrange by macroregion
-  gof_model <- read_csv(paste0("data/goodness_of_fit/", model, "_gof_", remapping, ".csv")) |> 
-    mutate(MODEL = paste0(model), .before = REGION) |> left_join(macroregions_br, by = join_by(UF_2)) |>
-    relocate(MACROREGION, .before = REGION) |>
-    arrange_at(c("MACROREGION", "UF_2"))
-  
-  # Combine results in a single dataframe
-  df_tmp <- bind_rows(gof_model)
-  
-  return(df_tmp)
-  
-  gc() # Garbage collect
-  
-  
-}
 
-data <- lapply(cmip6_models, function(x)
-  gof_per_model(x, remapping)) |> bind_rows()
-
+# Refactor columns of interest for plotting
 data$REGION <- factor(data$REGION, levels = unique(data$REGION[order(data$MACROREGION, data$REGION, decreasing = T)]))
 data$MODEL <- factor(data$MODEL, levels = unique(data$MODEL[order(data$MACROREGION, data$MODEL, decreasing = F)]))
 data$VARIABLE <- factor(data$VARIABLE, levels = c("TMIN", "TMAX", "PREC"))

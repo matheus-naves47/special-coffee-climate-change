@@ -17,7 +17,7 @@ df_dwgd <-
 cmip6_models <-
   list.dirs("data/climate_grids/CMIP6/",
             recursive = F,
-            full.names = F)[c(1:8, 10, 11)]
+            full.names = F)
 
 regions <- df_dwgd$REGION |> unique()
 
@@ -141,7 +141,8 @@ for (model in cmip6_models) {
 }
 
 # Apply function for all regions over all models remapped with bilinear method
-for (model in cmip6_models) {
+# No multimodel ensemble for bilinear interpolation method
+for (model in cmip6_models[c(1:8, 10, 11)]) {
   
   df_aux <- mclapply(1:length(regions), function(x)
     gof_by_region(x, model, remapping = 'bilinear'), mc.cores = 6) |> bind_rows()
@@ -150,9 +151,12 @@ for (model in cmip6_models) {
   
 }
 
+df_cmip6_gof <- bind_rows(df_cmip6_gof, df_gof_old)
+
 # Export tables
 write_csv(df_cmip6_gof, 'data/goodness_of_fit/CMIP6_gof.csv')
 
+df_gof_old <- read_csv("data/goodness_of_fit/CMIP6_gof.csv")# |> filter(REMAPPING == 'bilinear')
 
 
 # LaTeX Tables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

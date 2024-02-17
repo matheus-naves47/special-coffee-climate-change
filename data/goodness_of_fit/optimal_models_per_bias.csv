@@ -39,6 +39,7 @@ Atlântico Baiano,BA,MIROC6,TMAX,conservative,-0.14
 Campo das Vertentes,MG,MIROC6,TMAX,conservative,0.16
 Caparaó,ES,CMCC-ESM2,TMAX,conservative,-0.39
 Ceará,CE,BCC-ESM1,TMAX,conservative,0.14
+Ceará,CE,MM-ENSEMBLE,TMAX,conservative,-0.14
 Ceará,CE,MPI-ESM1-2-HR,TMAX,conservative,-0.14
 Cerrado Mineiro,MG,MIROC6,TMAX,conservative,0.06
 Chapada Diamantina,BA,CMCC-ESM2,TMAX,conservative,0.41
@@ -59,17 +60,17 @@ Norte e Noroeste de Minas,MG,MIROC6,TMAX,conservative,-0.45
 Oeste da Bahia,BA,BCC-ESM1,TMAX,conservative,-0.61
 Ourinhos e Avaré,SP,BCC-ESM1,TMAX,conservative,-0.14
 Paraná,PR,CMCC-ESM2,TMAX,conservative,-0.15
-Pernambuco,PE,HadGEM3-GC31-MM,TMAX,conservative,-0.2
+Pernambuco,PE,MM-ENSEMBLE,TMAX,conservative,-0.12
 Pinhal,SP,MIROC6,TMAX,conservative,-0.12
 Planalto Central,DF,MRI-ESM2-0,TMAX,conservative,-0.06
 Planalto de Vitória da Conquista,BA,INM-CM4-8,TMAX,conservative,-0.17
-Rondônia,RO,CMCC-ESM2,TMAX,conservative,1.63
+Rondônia,RO,MM-ENSEMBLE,TMAX,conservative,-1.56
 Serrana de Itiruçu/Brejões,BA,HadGEM3-GC31-MM,TMAX,conservative,0.01
 Serrana do Rio de Janeiro,RJ,CMCC-ESM2,TMAX,conservative,-0.05
 Sul de Minas,MG,MIROC6,TMAX,conservative,0.59
 Sul do Rio de Janeiro,RJ,MIROC6,TMAX,conservative,0.13
-Acre,AC,MIROC6,PREC,conservative,0.52
-Alta Mogiana,SP,INM-CM4-8,PREC,conservative,-0.21
+Acre,AC,MM-ENSEMBLE,PREC,conservative,0.03
+Alta Mogiana,SP,MM-ENSEMBLE,PREC,conservative,-0.1
 Atlântico Baiano,BA,MIROC6,PREC,conservative,-0.05
 Campo das Vertentes,MG,MRI-ESM2-0,PREC,conservative,0.1
 Caparaó,ES,GFDL-ESM4,PREC,conservative,0.07
@@ -82,14 +83,15 @@ Goiás,GO,GFDL-ESM4,PREC,conservative,-0.01
 Mantiqueira de Minas,MG,GFDL-ESM4,PREC,conservative,-0.11
 Mantiqueira de Minas,MG,MPI-ESM1-2-HR,PREC,conservative,0.11
 Marília e Garça,SP,BCC-ESM1,PREC,conservative,0.01
+Marília e Garça,SP,MM-ENSEMBLE,PREC,conservative,-0.01
 Matas de Minas,MG,MPI-ESM1-2-HR,PREC,conservative,-0.04
 Matas de Rondônia,RO,GFDL-ESM4,PREC,conservative,0.07
-Mato Grosso,MT,MPI-ESM1-2-HR,PREC,conservative,0.24
+Mato Grosso,MT,MM-ENSEMBLE,PREC,conservative,-0.13
 Montanhas de Minas,MG,MPI-ESM1-2-HR,PREC,conservative,0.06
 Montanhas do Espírito Santo,ES,CMCC-CM2-SR5,PREC,conservative,-0
 Média Mogiana,SP,MPI-ESM1-2-HR,PREC,conservative,0.04
 Noroeste/Norte do Rio de Janeiro,RJ,MRI-ESM2-0,PREC,conservative,-0.14
-Norte Pioneiro do Paraná,PR,IPSL-CM6A-LR,PREC,conservative,-0.1
+Norte Pioneiro do Paraná,PR,MM-ENSEMBLE,PREC,conservative,0.07
 Norte e Noroeste de Minas,MG,IPSL-CM6A-LR,PREC,conservative,-0.23
 Oeste da Bahia,BA,MRI-ESM2-0,PREC,conservative,0.29
 Ourinhos e Avaré,SP,BCC-ESM1,PREC,conservative,0.02
