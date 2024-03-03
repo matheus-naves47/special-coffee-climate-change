@@ -142,7 +142,7 @@ for (model in cmip6_models) {
 
 # Apply function for all regions over all models remapped with bilinear method
 # No multimodel ensemble for bilinear interpolation method
-for (model in cmip6_models[c(1:8, 10, 11)]) {
+for (model in cmip6_models) {
   
   df_aux <- mclapply(1:length(regions), function(x)
     gof_by_region(x, model, remapping = 'bilinear'), mc.cores = 6) |> bind_rows()
@@ -151,12 +151,8 @@ for (model in cmip6_models[c(1:8, 10, 11)]) {
   
 }
 
-df_cmip6_gof <- bind_rows(df_cmip6_gof, df_gof_old)
-
 # Export tables
 write_csv(df_cmip6_gof, 'data/goodness_of_fit/CMIP6_gof.csv')
-
-df_gof_old <- read_csv("data/goodness_of_fit/CMIP6_gof.csv")# |> filter(REMAPPING == 'bilinear')
 
 
 # LaTeX Tables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -197,7 +193,7 @@ df_gof_old <- read_csv("data/goodness_of_fit/CMIP6_gof.csv")# |> filter(REMAPPIN
 
 
 # Climdex GoF ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-df_climdex_dwgd <- read_csv("data/climdex/BR-DWGD_climdex_indices.csv") # from climdex_indices.R
+df_climdex_dwgd <- read_csv("data/climdex/BR-DWGD_climdex_indices.csv") # from climdex.R
 df_climdex_cmip6 <- read_csv("data/climdex/CMIP6_climdex_indices.csv")
 
 # list indices

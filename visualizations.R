@@ -24,8 +24,8 @@ cmip6_models <-
             full.names = F)
 
 
-remapping <- "conservative"
-# remapping <- "bilinear"
+# remapping <- "conservative"
+remapping <- "bilinear"
 
 # Loop to import every model
 for (model in cmip6_models) {
@@ -133,7 +133,7 @@ legend(
 
 
 # Prec
-prec_taylor <- taylor.diagram(
+taylor.diagram(
   ref = data$TMIN_DWGD,
   model = data$PREC_BCC_ESM1,
   normalize = T,
@@ -143,7 +143,7 @@ prec_taylor <- taylor.diagram(
   pcex = 1.5
 )
 
-prec_taylor <- for (i in c(2:11)) {
+for (i in c(2:11)) {
   taylor.diagram(
     ref = data$TMIN_DWGD,
     model = data[[str_replace_all(paste0("PREC_", cmip6_models[i]), "-", "_")]],
@@ -155,7 +155,7 @@ prec_taylor <- for (i in c(2:11)) {
   )
   
 }
-prec_taylor <- legend(
+legend(
   "topright",
   cmip6_models[c(1:11)],
   pch = c(19, 2:11),
@@ -295,7 +295,7 @@ temp_indices <- c("TXX", "TNN", "DTR", "TN10P", "TN90P", "TX10P", "TX90P", "WSDI
 prec_indices <- c("PRCPTOT", "RX1DAY", "RX5DAY", "R95P", "SDII", "R20MM", "CWD", "CDD")
 
 # Fix
-fix <- read_csv("data/goodness_of_fit/BCC-ESM1_gof_bilinear.csv") |> select(REGION, UF_2) |> filter(!duplicated(REGION))
+fix <- read_csv("data/goodness_of_fit/CMIP6_gof.csv") |> select(REGION, UF_2) |> filter(!duplicated(REGION))
 
 data <- data |> left_join(fix, by = join_by(REGION)) |> left_join(macroregions_br, by = join_by(UF_2)) |>
   relocate(c(MACROREGION, UF_2), .before = REGION) |>

@@ -30,7 +30,7 @@ remappings <- c("conservative", "bilinear")
 
 
 # Loop to import every model
-for (remapping in remappings[1]) {
+for (remapping in remappings) {
   for (model in cmip6_models) {
     assign(paste0("df_", model, "_", remapping),
            read_parquet(
@@ -49,7 +49,7 @@ for (remapping in remappings[1]) {
   read_parquet("data/regions_data/BR_DWGD_regions_daily.parquet") |> filter(year(DATE) <= 2014)
 
 # List regions
-regions <- df_MIROC6_conservative$REGION |> unique()
+regions <- `df_BR-DWGD`$REGION |> unique()
 
 
 # Function to calculate yearly climdex indices by model/region
@@ -242,7 +242,6 @@ for (model in cmip6_models) {
   
   df_climdex_cmip6 <- bind_rows(df_climdex_cmip6, df_aux)
 }
-
 
 # Apply function for all regions on BR-DWGD model
 df_climdex_dwgd <- mclapply(regions, function(x)
