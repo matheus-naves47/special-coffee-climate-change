@@ -15,6 +15,9 @@ regions_geoloc <-
 
 ### Data extraction from climate grids
 
+# index = 1
+# spatvector = regions_geoloc
+
 year_inds <- seq(1961, 2020)
 
 # Function to extract each variable by year (parallelized) and output a single dataframe
@@ -24,18 +27,22 @@ extract_by_year <- function(index, spatvector) {
   # Import raster data
   tmin_rst <-
     rast(paste0(
-      "data/climate_grids/BR_DWGD/Tmin_BR-DWGD_",
+      "data/climate_grids/BR_DWGD/tmin/Tmin_BR-DWGD_",
       temp_year,
       ".nc"
     ))
   tmax_rst <-
     rast(paste0(
-      "data/climate_grids/BR_DWGD/Tmax_BR-DWGD_",
+      "data/climate_grids/BR_DWGD/tmax/Tmax_BR-DWGD_",
       temp_year,
       ".nc"
     ))
   prec_rst <-
-    rast(paste0("data/climate_grids/BR_DWGD/pr_BR-DWGD_", temp_year, ".nc"))
+    rast(paste0(
+      "data/climate_grids/BR_DWGD/pr/pr_BR-DWGD_",
+      temp_year,
+      ".nc"
+    ))
   
   # Set raster names as timestamps
   names(tmin_rst) <- terra::time(tmin_rst)
@@ -56,7 +63,7 @@ extract_by_year <- function(index, spatvector) {
   prec_tmp <-
     exact_extract(prec_rst,
                   spatvector,
-                  fun = "mean",
+                  c("mean", "sum"),
                   append_cols = T)
   
   # Pivot each dataframe to long format
@@ -68,10 +75,15 @@ extract_by_year <- function(index, spatvector) {
     tmax_tmp %>% pivot_longer(!(1:ncol(spatvector)-1),
                               names_to = "DATE",
                               values_to = "TMAX")
+  # prec_tmp <-
+  #   prec_tmp %>% pivot_longer(!(1:ncol(spatvector)-1),
+  #                             names_to = "DATE",
+  #                             values_to = "PREC")
   prec_tmp <-
-    prec_tmp %>% pivot_longer(!(1:ncol(spatvector)-1),
-                              names_to = "DATE",
-                              values_to = "PREC")
+    prec_tmp |> pivot_longer(!(1:ncol(spatvector) - 1),
+                             names_to = c(".value", "date"),
+                             names_sep = "\\.") |>
+    rename_with( ~ paste0("PR_", .),-(1:ncol(spatvector)))
   
   
   # Combine everything in a single dataframe
@@ -83,7 +95,8 @@ extract_by_year <- function(index, spatvector) {
       DATE = tmin_tmp$DATE,
       TMIN = tmin_tmp$TMIN,
       TMAX = tmax_tmp$TMAX,
-      PREC = prec_tmp$PREC
+      PREC_MEAN = prec_tmp$PR_mean,
+      PREC_SUM = prec_tmp$PR_sum
     ) %>% mutate(DATE = str_replace_all(DATE, "mean.", ""),
                  DATE = as_date(DATE))
   
@@ -98,7 +111,7 @@ extract_by_year <- function(index, spatvector) {
 tic()
 df_br_dwgd <-
   mclapply(1:length(year_inds), function(x)
-    extract_by_year(x, regions_geoloc), mc.cores = 8) %>% bind_rows()
+    extract_by_year(x, regions_geoloc), mc.cores = 6) %>% bind_rows()
 toc()
 
 # Export

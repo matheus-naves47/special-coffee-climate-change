@@ -6,7 +6,7 @@ library(lubridate)
 # import data and summarise the variables by year
 # BR-DWGD has incomplete data for 2020
 df_dwgd_yearly <-
-  read_parquet("data/BR_DWGD_regions_daily.parquet") |>
+  read_parquet("data/regions_data/BR_DWGD_regions_daily.parquet") |>
   subset(year(DATE) != 2020) |> group_by(REGION, UF, UF_2, year(DATE)) |> summarise(TMIN = mean(TMIN),
                                                                                     TMAX = mean(TMAX),
                                                                                     PREC = sum(PREC)) |> rename(YEAR = `year(DATE)`)
@@ -94,10 +94,24 @@ trend_per_region <- function(data, region) {
 }
 
 
+# Split data in two periods, 1961-1989 and 1990-2019
+df_dwgd_period1 <- df_dwgd_yearly |> filter(YEAR <= 1989)
+df_dwgd_period2 <- df_dwgd_yearly |> filter(YEAR >= 1989)
+
 # apply function to all regions
-br_dwgd_trends <-
+br_dwgd_trends1 <-
   lapply(1:length(regions), function(x)
-    trend_per_region(data = df_dwgd_yearly, region = regions[x])) |> bind_rows()
+    trend_per_region(data = df_dwgd_period1, region = regions[x])) |> bind_rows()
+
+br_dwgd_trends2 <-
+  lapply(1:length(regions), function(x)
+    trend_per_region(data = df_dwgd_period2, region = regions[x])) |> bind_rows()
+
+
+br_dwgd_trends1 <- br_dwgd_trends1 |> mutate(RANGE = "1961-1989", .after = UF)
+br_dwgd_trends2 <- br_dwgd_trends2 |> mutate(RANGE = "1990-2019", .after = UF)
+
+br_dwgd_trends <- bind_rows(br_dwgd_trends1, br_dwgd_trends2)
 
 ## Export ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

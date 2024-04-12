@@ -21,6 +21,8 @@ cmip6_models <-
 
 regions <- df_dwgd$REGION |> unique()
 
+remappings <- c("conservative", "bilinear")
+
 # Function to calculate GoF statistics over all regions given a model
 gof_by_region <- function(index, model, remapping) {
   
@@ -126,9 +128,102 @@ gof_by_region <- function(index, model, remapping) {
   } 
 }
 
+gof_by_model <- function(model, remapping) {
+  
+  df_model <-
+    read_parquet(paste0("data/regions_data/", model, "_regions_daily_", remapping, ".parquet"))
+  
+  if (model == "CMCC-CM2-SR5") {
+    
+    # CMCC-CM2-SR5 only has precipitation variable
+    # Get simulated and observed (BR-DWGD) data for a specific region
+    df_simulated <- df_model
+    df_observed <-
+      df_dwgd |> right_join(df_simulated,
+                            by = join_by(REGION, UF, UF_2, DATE)) |>
+      select(-c(TMIN, TMAX, PREC.y)) |>
+      rename(PREC = PREC.x)
+    
+    # Calculate GoF measures for precipitation
+    prec_gof <-
+      gof(sim = df_simulated$PREC,
+          obs = df_observed$PREC,
+          na.rm = TRUE) |> as_tibble(rownames = pkgconfig::get_config("tibble::rownames", "GOF")) |>
+      pivot_wider(names_from = GOF, values_from = V1) |>
+      mutate(
+        MODEL = model,
+        VARIABLE = "PREC",
+        REMAPPING = remapping,
+        .before = ME
+      )
+    
+    # Combine results in a single dataframe
+    df_tmp <- bind_rows(prec_gof)
+    
+    return(df_tmp)
+    
+    gc() # Garbage collect
+    
+  }
+  # For the rest of the models, calculate GoF measures for all three variable
+  else {
+    # Get simulated (HadGEM3) and observed (BR-DWGD) data for a specific region
+    df_simulated <- df_model
+    df_observed <- df_dwgd |> right_join(df_simulated,
+                                         by = join_by(REGION, UF, UF_2, DATE)) |>
+      select(-c(TMIN.y, TMAX.y, PREC.y)) |>
+      rename(TMIN = TMIN.x,
+             TMAX = TMAX.x,
+             PREC = PREC.x)
+    
+    # Calculate GoF measures for each variable
+    tmin_gof <-
+      gof(sim = df_simulated$TMIN,
+          obs = df_observed$TMIN,
+          na.rm = TRUE) |> as_tibble(rownames = pkgconfig::get_config("tibble::rownames", "GOF")) |>
+      pivot_wider(names_from = GOF, values_from = V1) |>
+      mutate(
+        MODEL = model,
+        VARIABLE = "TMIN",
+        REMAPPING = remapping,
+        .before = ME
+      )
+    tmax_gof <-
+      gof(sim = df_simulated$TMAX,
+          obs = df_observed$TMAX,
+          na.rm = TRUE) |> as_tibble(rownames = pkgconfig::get_config("tibble::rownames", "GOF")) |>
+      pivot_wider(names_from = GOF, values_from = V1) |>
+      mutate(
+        MODEL = model,
+        VARIABLE = "TMAX",
+        REMAPPING = remapping,
+        .before = ME
+      )
+    prec_gof <-
+      gof(sim = df_simulated$PREC,
+          obs = df_observed$PREC,
+          na.rm = TRUE) |> as_tibble(rownames = pkgconfig::get_config("tibble::rownames", "GOF")) |>
+      pivot_wider(names_from = GOF, values_from = V1) |>
+      mutate(
+        MODEL = model,
+        VARIABLE = "PREC",
+        REMAPPING = remapping,
+        .before = ME
+      )
+    
+    # Combine results in a single dataframe
+    df_tmp <- bind_rows(tmin_gof, tmax_gof, prec_gof)
+    
+    return(df_tmp)
+    
+    gc() # Garbage collect
+    
+  } 
+}
+
 
 # Empty dataframe to receive data
-df_cmip6_gof <- tibble()
+df_cmip6_gof_region <- tibble()
 
 # Apply function for all regions over all models remapped with conservative method
 for (model in cmip6_models) {
@@ -136,7 +231,7 @@ for (model in cmip6_models) {
   df_aux <- mclapply(1:length(regions), function(x)
            gof_by_region(x, model, remapping = 'conservative'), mc.cores = 6) |> bind_rows()
   
-  df_cmip6_gof <- bind_rows(df_cmip6_gof, df_aux)
+  df_cmip6_gof_region <- bind_rows(df_cmip6_gof_region, df_aux)
   
 }
 
@@ -147,12 +242,29 @@ for (model in cmip6_models) {
   df_aux <- mclapply(1:length(regions), function(x)
     gof_by_region(x, model, remapping = 'bilinear'), mc.cores = 6) |> bind_rows()
   
-  df_cmip6_gof <- bind_rows(df_cmip6_gof, df_aux)
+  df_cmip6_gof_region <- bind_rows(df_cmip6_gof_region, df_aux)
   
 }
 
+
+df_cmip6_gof_model <- tibble()
+
+# Apply function across all models, bilinear and 1st order conservative interpolated
+for (remap in remappings) {
+  
+  df_aux <- mclapply(cmip6_models, function(x) gof_by_model(x, remapping = remap), mc.cores = 6) |>  bind_rows()
+  
+  df_cmip6_gof_model <- bind_rows(df_cmip6_gof_model, df_aux)
+  
+}
+
+
+df_cmip6_gof_model <- mclapply(cmip6_models, function(x) gof_by_model(x, remapping = "conservative"), mc.cores = 6) |>  bind_rows()
+
+
 # Export tables
-write_csv(df_cmip6_gof, 'data/goodness_of_fit/CMIP6_gof.csv')
+write_csv(df_cmip6_gof_region, 'data/goodness_of_fit/CMIP6_gof_region.csv')
+write_csv(df_cmip6_gof_model, 'data/goodness_of_fit/CMIP6_gof_model.csv')
 
 
 # LaTeX Tables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -310,3 +422,8 @@ for (variable in variables) {
 df_bias <- df_bias |> rename(REGIAO = REGION, UF = UF_2, MODELO = MODEL, VARIAVEL = VARIABLE, REMAPEAMENTO = REMAPPING)
 
 write_csv(df_bias, 'data/goodness_of_fit/optimal_models_per_bias.csv')
+
+
+# Verify if HadGEM3-GC31-MM performs better than multimodel ensemble
+
+df_had_mm <- df_climdex_kge |> filter(MODEL %in% c("HadGEM3-GC31-MM", "MM-ENSEMBLE"))

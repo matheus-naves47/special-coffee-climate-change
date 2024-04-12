@@ -24,8 +24,8 @@ cmip6_models <-
             full.names = F)
 
 
-# remapping <- "conservative"
-remapping <- "bilinear"
+remapping <- "conservative"
+# remapping <- "bilinear"
 
 # Loop to import every model
 for (model in cmip6_models) {
@@ -184,9 +184,9 @@ data$VARIABLE <- factor(data$VARIABLE, levels = c("TMIN", "TMAX", "PREC"))
 
 # Mean Error Portraits
 
-tmp_plot <-
-  data |> ggplot(aes(x = MODEL, y = REGION, fill = ME)) +
-  geom_tile(colour = 'black') + scale_fill_gradientn(colours = rev(brewer.pal(11, "RdBu"))) +
+#tmp_plot <-
+  data |> ggplot(aes(y = REGION, x = MODEL, fill = ME)) +
+  geom_tile(colour = 'black') + scale_fill_gradientn(colours = brewer.pal(11, "RdGy")) +
   labs(title = "Mean Bias (ME)") +
   guides(fill = guide_colorbar(barheight = 15)) + theme_bw() +
   theme(
@@ -307,6 +307,7 @@ data$REGION <- factor(data$REGION, levels = unique(data$REGION[order(data$MACROR
 data$MODEL <- factor(data$MODEL, levels = unique(data$MODEL[order(data$MACROREGION, data$MODEL, decreasing = F)]))
 data$INDEX <- factor(data$INDEX, levels = unique(data$INDEX))
 
+
 # KGE portrait for temperature indices
 
 remappings <- c("conservative", "bilinear")
@@ -323,7 +324,7 @@ for (remapping in remappings) {
   
   tmp_plot <-
     data |> filter(REMAPPING == str_to_title(remapping)) |> filter(INDEX %in% temp_indices) |> ggplot(aes(x = MODEL, y = REGION, fill = KGE)) +
-    geom_tile(colour = 'black') + scale_fill_gradientn(colours = brewer.pal(11, "RdBu")) +
+    geom_tile(colour = 'black') + scale_fill_gradientn(colours = brewer.pal(11, "RdGy")) +
     labs(title = "KGE Index for Temperature Indices", subtitle = subtitle) +
     guides(fill = guide_colorbar(barheight = 15)) + theme_bw() +
     theme(
@@ -346,6 +347,7 @@ for (remapping in remappings) {
   ggsave(tmp_plot, device = 'eps', file=paste0("plots/kge_temps_climdex_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
 }
 
+# For precipitation indices
 for (remapping in remappings) {
   if (remapping == "conservative") {
     subtitle = "1st Order Conservative Remapping"
@@ -357,7 +359,7 @@ for (remapping in remappings) {
   
   tmp_plot <-
     data |> filter(REMAPPING == str_to_title(remapping)) |> filter(INDEX %in% prec_indices) |> ggplot(aes(x = MODEL, y = REGION, fill = KGE)) +
-    geom_tile(colour = 'black') + scale_fill_gradientn(colours = brewer.pal(11, "RdBu")) +
+    geom_tile(colour = 'black') + scale_fill_gradientn(colours = brewer.pal(11, "RdGy")) +
     labs(title = "KGE Index for Precipitation Indices", subtitle = subtitle) +
     guides(fill = guide_colorbar(barheight = 15)) + theme_bw() +
     theme(
@@ -378,4 +380,83 @@ for (remapping in remappings) {
   
   # show(tmp_plot)
   ggsave(tmp_plot, device = 'eps', file=paste0("plots/kge_prec_climdex_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
+}
+
+
+
+# KGE Portrait - HadGEM3-GC31-MM x MM-ENSEMBLE
+
+# KGE portrait for temperature indices
+
+remappings <- c("conservative", "bilinear")
+data <- data |> filter(MODEL %in% c("HadGEM3-GC31-MM", "MM-ENSEMBLE"))
+
+
+for (remapping in remappings) {
+  if (remapping == "conservative") {
+    subtitle = "1st Order Conservative Remapping"
+    
+  }
+  else {
+    subtitle = "Bilinear Interpolation Remapping"
+  }
+  
+  tmp_plot <-
+    data |> filter(REMAPPING == str_to_title(remapping)) |> filter(INDEX %in% temp_indices) |> ggplot(aes(x = MODEL, y = REGION, fill = KGE)) +
+    geom_tile(colour = 'black') + scale_fill_gradientn(colours = brewer.pal(11, "RdGy")) +
+    labs(title = "KGE Index for Temperature Indices", subtitle = subtitle) +
+    guides(fill = guide_colorbar(barheight = 15)) + theme_bw() +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      legend.title = element_blank(),
+      legend.box.margin = margin(5, 5, 0, 0),
+      axis.text.x = element_text(
+        hjust = 1,
+        angle = 90,
+        face = "bold"
+      ),
+      axis.text.y = element_text(face = "bold"),
+      plot.title = element_text(hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5),
+      panel.border = element_blank()
+    ) + facet_grid(~INDEX)
+  
+  # show(tmp_plot)
+  ggsave(tmp_plot, device = 'eps', file=paste0("plots/kge_temps_climdex_HadMM_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
+}
+
+# For precipitation indices
+for (remapping in remappings) {
+  if (remapping == "conservative") {
+    subtitle = "1st Order Conservative Remapping"
+    
+  }
+  else {
+    subtitle = "Bilinear Interpolation Remapping"
+  }
+  
+  tmp_plot <-
+    data |> filter(REMAPPING == str_to_title(remapping)) |> filter(INDEX %in% prec_indices) |> ggplot(aes(x = MODEL, y = REGION, fill = KGE)) +
+    geom_tile(colour = 'black') + scale_fill_gradientn(colours = brewer.pal(11, "RdGy")) +
+    labs(title = "KGE Index for Precipitation Indices", subtitle = subtitle) +
+    guides(fill = guide_colorbar(barheight = 15)) + theme_bw() +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      legend.title = element_blank(),
+      legend.box.margin = margin(5, 5, 0, 0),
+      axis.text.x = element_text(
+        hjust = 1,
+        angle = 90,
+        face = "bold"
+      ),
+      axis.text.y = element_text(face = "bold"),
+      plot.title = element_text(hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5),
+      panel.border = element_blank()
+    ) + facet_grid(~INDEX)
+  
+  # show(tmp_plot)
+  ggsave(tmp_plot, device = 'eps', file=paste0("plots/kge_prec_climdex_HadMM_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
 }
