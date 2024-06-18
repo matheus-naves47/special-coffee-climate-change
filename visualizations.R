@@ -16,10 +16,10 @@ macroregions_br <-
 
 # Import observed (BR-DWGD) data and list models
 df_dwgd <-
-  read_parquet("data/regions_data/BR_DWGD_regions_daily.parquet") |> filter(year(DATE) <= 2014)
+  read_parquet("data/processed/BR-DWGD/BR_DWGD_regions_daily.parquet") |> filter(year(DATE) <= 2014)
 
 cmip6_models <-
-  list.dirs("data/climate_grids/CMIP6/",
+  list.dirs("data/raw/climate_grids/CMIP6/",
             recursive = F,
             full.names = F)
 
@@ -31,8 +31,8 @@ remapping <- "conservative"
 for (model in cmip6_models) {
   
   assign(paste0("df_", model),
-         read_parquet(paste0("data/regions_data/", model, "_regions_daily_", remapping, ".parquet")))
-
+         read_parquet(paste0("data/processed/CMIP6/", model, "_regions_daily_", remapping, ".parquet")))
+  
   
 }
 
@@ -172,7 +172,7 @@ rm(data)
 
 # Portrait Plots ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-data <- read_csv("data/goodness_of_fit/CMIP6_gof.csv") |> left_join(macroregions_br, by = join_by(UF_2)) |>
+data <- read_csv("data/processed/gof/CMIP6_gof_region.csv") |> left_join(macroregions_br, by = join_by(UF_2)) |>
   relocate(MACROREGION, .before = REGION) |>
   arrange_at(c("MACROREGION", "UF_2"))
 
@@ -185,7 +185,7 @@ data$VARIABLE <- factor(data$VARIABLE, levels = c("TMIN", "TMAX", "PREC"))
 # Mean Error Portraits
 
 #tmp_plot <-
-  data |> ggplot(aes(y = REGION, x = MODEL, fill = ME)) +
+data |> ggplot(aes(y = REGION, x = MODEL, fill = ME)) +
   geom_tile(colour = 'black') + scale_fill_gradientn(colours = brewer.pal(11, "RdGy")) +
   labs(title = "Mean Bias (ME)") +
   guides(fill = guide_colorbar(barheight = 15)) + theme_bw() +
@@ -207,7 +207,7 @@ data$VARIABLE <- factor(data$VARIABLE, levels = c("TMIN", "TMAX", "PREC"))
 
 
 # show(tmp_plot)
-ggsave(tmp_plot, device = 'eps', file=paste0("plots/mean_bias_", remapping, ".eps"), width = 8, height = 7, units = 'in', dpi = 600)
+ggsave(tmp_plot, device = 'eps', file=paste0("output/plots/mean_bias_", remapping, ".eps"), width = 8, height = 7, units = 'in', dpi = 600)
 
 # Mean Average Error Portraits
 tmp_plot <-
@@ -232,7 +232,7 @@ tmp_plot <-
   ) + facet_grid( ~ VARIABLE)
 
 
-ggsave(tmp_plot, device = 'eps', file = paste0("plots/mae_", remapping, ".eps"), width = 8, height = 7, units = 'in', dpi = 600)
+ggsave(tmp_plot, device = 'eps', file = paste0("output/plots/mae_", remapping, ".eps"), width = 8, height = 7, units = 'in', dpi = 600)
 
 # show(tmp_plot)
 rm(tmp_plot)
@@ -295,7 +295,7 @@ temp_indices <- c("TXX", "TNN", "DTR", "TN10P", "TN90P", "TX10P", "TX90P", "WSDI
 prec_indices <- c("PRCPTOT", "RX1DAY", "RX5DAY", "R95P", "SDII", "R20MM", "CWD", "CDD")
 
 # Fix
-fix <- read_csv("data/goodness_of_fit/CMIP6_gof.csv") |> select(REGION, UF_2) |> filter(!duplicated(REGION))
+fix <- read_csv("data/processed/gof/CMIP6_gof_region.csv") |> select(REGION, UF_2) |> filter(!duplicated(REGION))
 
 data <- data |> left_join(fix, by = join_by(REGION)) |> left_join(macroregions_br, by = join_by(UF_2)) |>
   relocate(c(MACROREGION, UF_2), .before = REGION) |>
@@ -344,7 +344,7 @@ for (remapping in remappings) {
     ) + facet_grid(~INDEX)
   
   # show(tmp_plot)
-  ggsave(tmp_plot, device = 'eps', file=paste0("plots/kge_temps_climdex_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
+  ggsave(tmp_plot, device = 'eps', file=paste0("output/plots/kge_temps_climdex_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
 }
 
 # For precipitation indices
@@ -379,7 +379,7 @@ for (remapping in remappings) {
     ) + facet_grid(~INDEX)
   
   # show(tmp_plot)
-  ggsave(tmp_plot, device = 'eps', file=paste0("plots/kge_prec_climdex_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
+  ggsave(tmp_plot, device = 'eps', file=paste0("output/plots/kge_prec_climdex_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
 }
 
 
@@ -423,7 +423,7 @@ for (remapping in remappings) {
     ) + facet_grid(~INDEX)
   
   # show(tmp_plot)
-  ggsave(tmp_plot, device = 'eps', file=paste0("plots/kge_temps_climdex_HadMM_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
+  ggsave(tmp_plot, device = 'eps', file=paste0("output/plots/kge_temps_climdex_HadMM_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
 }
 
 # For precipitation indices
@@ -458,5 +458,5 @@ for (remapping in remappings) {
     ) + facet_grid(~INDEX)
   
   # show(tmp_plot)
-  ggsave(tmp_plot, device = 'eps', file=paste0("plots/kge_prec_climdex_HadMM_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
+  ggsave(tmp_plot, device = 'eps', file=paste0("output/plots/kge_prec_climdex_HadMM_", remapping, ".eps"), width = 16, height = 9, units = 'in', dpi = 600)
 }
