@@ -9,11 +9,15 @@
 .Ruserdata
 *.Rproj
 
+# Processed .parquet data files
+data/processed/BR-DWGD/
+data/processed/CMIP6/
+
 # .nc files
-data/climate_grids/
+data/raw/climate_grids/
 
 # Raw Shapefiles (GADM)
-data/geodata/gadm/
+data/raw/geodata/
 
 # VSCode files
 .vscode
