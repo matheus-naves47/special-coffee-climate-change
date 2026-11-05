@@ -1,40 +1,45 @@
 library(tidyverse)
 library(terra)
 library(tidyterra)
-library(geodata)
 library(geobr)
+library(sf)
 
-# Study areas data (with corrections to match GADM data)
+# Brazil's shapefile at municipal administrative level (using geobr's latest data)
+brazil_mun_lvl <- read_municipality(year = 2024)
+
+brazil_mun_lvl <- brazil_mun_lvl %>% mutate(name_muni = str_to_title(name_muni))
+
+# Study areas data (with corrections to match geobr's data)
 regions <- read_csv("data/raw/origin_regions.csv") %>% 
-  mutate(MUNICIPIO = str_replace_all(MUNICIPIO, "d`", "D'"),
-         MUNICIPIO = str_replace(MUNICIPIO, "Passa-Vinte", "Passa Vinte"),
-         MUNICIPIO = str_replace(MUNICIPIO, "Dona Eusébia", "Dona Euzébia"),
-         MUNICIPIO = str_replace(MUNICIPIO, "São Thomé das Letras", "São Tomé das Letras"),
-         MUNICIPIO = str_replace(MUNICIPIO, "Diamante d'Oeste", "Diamante D'Oeste"),
-         MUNICIPIO = str_replace(MUNICIPIO, "Rancho Alegre d'Oeste", "Rancho Alegre D'Oeste"),
-         MUNICIPIO = str_replace(MUNICIPIO, "Machadinho d'Oeste", "Machadinho D'Oeste"),
-         MUNICIPIO = str_replace(MUNICIPIO, "Alta Floresta d'Oeste", "Alta Floresta D'Oeste"),
-         MUNICIPIO = str_replace(MUNICIPIO, "Alvorada d'Oeste", "Alvorada D'Oeste"),
-         MUNICIPIO = str_replace(MUNICIPIO, "Espigão d'Oeste", "Espigão D'Oeste"),
-         MUNICIPIO = str_replace(MUNICIPIO, "Nova Brasilândia d'Oeste", "Nova Brasilândia D'Oeste"),
-         MUNICIPIO = str_replace(MUNICIPIO, "Santa Luzia d'Oeste", "Santa Luzia D'Oeste"),
-         MUNICIPIO = str_replace(MUNICIPIO, "São Felipe d'Oeste", "São Felipe D'Oeste")) %>% 
-  rename(NAME_2 = MUNICIPIO,
-         NAME_1 = UF,
+  rename(name_muni = MUNICIPIO,
+         name_state = UF,
          REGION = REGIAO,
-         NAME_3 = UF_SIGLA)
-  
-# Brazil's shapefile at municipal administrative level
-brazil_mun_lvl <- gadm("BRA", level = 2, "data/raw/geodata")
+         abbrev_state = UF_SIGLA) %>% 
+  mutate(name_muni = str_replace_all(name_muni, "d`", "D'"),
+         name_muni = str_replace_all(name_muni, "Thomé", "Tomé"),
+         name_muni = str_replace_all(name_muni, "Passa-", "Passa "),
+         name_muni = str_replace_all(name_muni, "Dona Eusébia", "Dona Euzébia"),
+         name_muni = str_to_title(name_muni),
+         name_muni = str_replace_all(name_muni, "Santo Antônio Do Leverger", "Santo Antônio De Leverger"),
+         name_muni = str_replace_all(name_muni, "Barão De Monte Alto", "Barão Do Monte Alto"))
+
 
 # Subset geodata to study areas
-regions_geoloc <- brazil_mun_lvl %>% inner_join(regions, by = c("NAME_1", "NAME_2"))# %>% terra::aggregate(by='REGION')
-regions_geoloc <- sf::st_as_sf(regions_geoloc) # Convert to sf
+regions_geoloc <- brazil_mun_lvl %>% inner_join(regions, by = c("name_muni", "name_state", "abbrev_state")) %>% rename(bsca_region = REGION) %>% 
+  select(bsca_region, name_muni, everything(), -code_region) %>% 
+  mutate(code_state = as.character(code_state)) %>% 
+  arrange(bsca_region)
+
+regions_geoloc <- vect(regions_geoloc)
+regions_geoloc_agg <- regions_geoloc %>% terra::aggregate(by='bsca_region')
+
+regions_geoloc <- sf::st_as_sf(regions_geoloc)
+regions_geoloc_agg <- sf::st_as_sf(regions_geoloc_agg)
 
 # Fix Caparaó region names (region contains municipalities from both Minas Gerais and Espírito Santo states)
-regions_geoloc[5,]$NAME_1 <- "Espírito Santo"
-regions_geoloc[5,]$NAME_3 <- "ES"
+# regions_geoloc[5,]$NAME_1 <- "Espírito Santo"
+# regions_geoloc[5,]$NAME_3 <- "ES"
 
-rm(brazil_mun_lvl, regions) # Cleanup
 
 write_rds(regions_geoloc, "data/processed/geodata/origin_regions_geodata.rds", compress = "xz") # Export
+write_rds(regions_geoloc_agg, "data/processed/geodata/origin_regions_geodata_agg.rds", compress = "xz") # Export

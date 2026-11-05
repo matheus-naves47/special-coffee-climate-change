@@ -12,12 +12,7 @@
 # Processed .parquet data files
 data/processed/BR-DWGD/
 data/processed/CMIP6/
-
-# .nc files
-data/raw/climate_grids/
-
-# Raw Shapefiles (GADM)
-data/raw/geodata/
+data/processed/climdex/municipal_per_state/
 
 # VSCode files
 .vscode

@@ -75,3 +75,87 @@ trend_per_region <- function(data, region) {
   
   return(results)
 }
+
+# function to run Mann-Kendall and Pettitt tests over a municipality
+trend_per_muni <- function(data, municipality) {
+  # subset data for region
+  df_aux <- data |> subset(MUNICIPALITY_CODE == municipality)
+  
+  # run Mann-Kendall and Pettitt tests on data (each variable)
+  mk_tmin <- mk.test(df_aux$TMIN)
+  ptt_tmin <- pettitt.test(df_aux$TMIN)
+  
+  mk_tmax <- mk.test(df_aux$TMAX)
+  ptt_tmax <- pettitt.test(df_aux$TMAX)
+  
+  mk_prec <- mk.test(df_aux$PR)
+  ptt_prec <- pettitt.test(df_aux$PR)
+  
+  # create dataframes for each variable
+  df_tmin <- tibble(
+    MUNICIPALITY = df_aux$MUNICIPALITY[1],
+    MUNICIPALITY_CODE = municipality,
+    UF = df_aux$UF[1],
+    UF_2 = df_aux$UF_2[1],
+    VARIABLE = "TMIN",
+    MK_p = mk_tmin$p.value,
+    MK_z = mk_tmin$statistic,
+    MK_S = mk_tmin$estimates[1],
+    MK_varS = mk_tmin$estimates[2],
+    MK_tau = mk_tmin$estimates[3],
+    PTT_cp = df_aux[[ptt_tmin$estimate[1], 5]],
+    PTT_p = ptt_tmin$p.value,
+    PTT_U = ptt_tmin$statistic,
+    PTT_mu1 = mean(df_aux[1:ptt_tmin$estimate[1],]$TMIN),
+    PTT_mu2 = mean(df_aux[ptt_tmin$estimate[1]:nrow(df_aux),]$TMIN)
+  )
+  
+  df_tmax <- tibble(
+    MUNICIPALITY = df_aux$MUNICIPALITY[1],
+    MUNICIPALITY_CODE = municipality,
+    UF = df_aux$UF[1],
+    UF_2 = df_aux$UF_2[1],
+    VARIABLE = "TMAX",
+    MK_p = mk_tmax$p.value,
+    MK_z = mk_tmax$statistic,
+    MK_S = mk_tmax$estimates[1],
+    MK_varS = mk_tmax$estimates[2],
+    MK_tau = mk_tmax$estimates[3],
+    PTT_cp = df_aux[[ptt_tmax$estimate[1], 5]],
+    PTT_p = ptt_tmax$p.value,
+    PTT_U = ptt_tmax$statistic,
+    PTT_mu1 = mean(df_aux[1:ptt_tmax$estimate[1],]$TMAX),
+    PTT_mu2 = mean(df_aux[ptt_tmax$estimate[1]:nrow(df_aux),]$TMAX)
+  )
+  
+  df_prec <- tibble(
+    MUNICIPALITY = df_aux$MUNICIPALITY[1],
+    MUNICIPALITY_CODE = municipality,
+    UF = df_aux$UF[1],
+    UF_2 = df_aux$UF_2[1],
+    VARIABLE = "PR",
+    MK_p = mk_prec$p.value,
+    MK_z = mk_prec$statistic,
+    MK_S = mk_prec$estimates[1],
+    MK_varS = mk_prec$estimates[2],
+    MK_tau = mk_prec$estimates[3],
+    PTT_cp = df_aux[[ptt_prec$estimate[1], 5]],
+    PTT_p = ptt_prec$p.value,
+    PTT_U = ptt_prec$statistic,
+    PTT_mu1 = mean(df_aux[1:ptt_prec$estimate[1],]$PR),
+    PTT_mu2 = mean(df_aux[ptt_prec$estimate[1]:nrow(df_aux),]$PR)
+  )
+  
+  # combine into a single dataframe and interpret the test results
+  results <- bind_rows(df_tmin, df_tmax, df_prec) |> mutate(
+    MK_trend = case_when(
+      MK_S > 0 & MK_p < 0.05 ~ 'increasing',
+      MK_S > 0 & MK_p > 0.05 ~ 'no trend',
+      MK_S == 0 ~ 'no trend',
+      MK_S < 0 & MK_p > 0.05 ~ 'no trend',
+      MK_S < 0 & MK_p < 0.05 ~ 'decreasing'
+    )
+  ) |> relocate(MK_trend, .after = VARIABLE)
+  
+  return(results)
+}

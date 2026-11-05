@@ -2,6 +2,9 @@ library(tidyverse)
 library(trend)
 library(arrow)
 library(lubridate)
+library(geobr)
+library(tictoc)
+library(xlsx)
 
 source("src/trend_per_region.R")
 
@@ -22,6 +25,31 @@ br_dwgd_trends <-
   lapply(1:length(regions), function(x)
     trend_per_region(data = df_dwgd, region = regions[x])) |> bind_rows()
 
-## Export ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+## Export 
 write_csv(br_dwgd_trends, "data/processed/trends/BR-DWGD_trends.csv")
+
+
+# Municipal Data ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+df <- open_dataset(
+  "data/processed/BR_DWGD/municipal/"
+) %>% group_by(MUNICIPALITY_CODE, MUNICIPALITY, UF, UF_2, year(DATE)) |>
+  summarise(TMIN = mean(TMIN, na.rm = T),
+            TMAX = mean(TMAX, na.rm = T),
+            PR = sum(PR, na.rm = T)) |> rename(YEAR = `year(DATE)`) %>% collect() %>% drop_na() %>%
+  arrange(MUNICIPALITY_CODE, YEAR)
+
+# df <- df %>% filter(YEAR >= 1990)
+
+municipalities <- df$MUNICIPALITY_CODE %>% unique()
+
+tic()
+dwgd_trends_muni <-
+  lapply(1:length(municipalities), function(x)
+    trend_per_muni(data = df, municipality = municipalities[x])) |> bind_rows()
+toc()
+
+dwgd_trends_muni <- dwgd_trends_muni %>% arrange(MUNICIPALITY_CODE)
+
+write.xlsx2(dwgd_trends_muni, "data/processed/BR_DWGD/results/BR_DWGD_trends_municipal.xlsx")
+  
